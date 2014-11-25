@@ -2,9 +2,24 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
+
+type Link struct {
+	Id      uint64 `json:"id"`
+	Title   string `json:"title"`
+	Url     string `json:"url"`
+	StoreId uint64 `json:"store_id"`
+}
+
+type Store struct {
+	Id    uint64 `json:"id"`
+	Title string `json:"title"`
+	Uuid  string `json:"uuid"`
+}
 
 func main() {
 
@@ -17,18 +32,18 @@ func main() {
 	stores.Methods("POST").HandlerFunc(StoresCreateHandler)
 
 	// Store singular
-	store := r.PathPrefix("/stores/{id}").Subrouter()
+	store := r.Path("/stores/{id}").Subrouter()
 	store.Methods("GET").HandlerFunc(StoreShowHandler)
 	store.Methods("PUT", "POST").HandlerFunc(StoreUpdateHandler)
 	store.Methods("DELETE").HandlerFunc(StoreDeleteHandler)
 
 	// links collection
-	links := r.PathPrefix("stores/{store_id}/links").Subrouter()
+	links := r.Path("/stores/{store_id}/links").Subrouter()
 	links.Methods("GET").HandlerFunc(StoreLinksIndexHandler)
 	links.Methods("POST").HandlerFunc(StoreLinksCreateHandler)
 
 	// links singular
-	link := r.PathPrefix("/store/{store_id}/links/{id}").Subrouter()
+	link := r.Path("/stores/{store_id}/links/{id}").Subrouter()
 	link.Methods("GET").HandlerFunc(StoreLinkShowHandler)
 	link.Methods("PUT", "POST").HandlerFunc(StoreLinkUpdateHandler)
 	link.Methods("DELETE").HandlerFunc(StoreLinkDeleteHandler)
@@ -57,8 +72,25 @@ func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
-	text := "GET /stores/{id} - show store"
-	rw.Write([]byte(text))
+	//text := "GET /stores/{id} - show store"
+	vars := mux.Vars(r)
+	storeId, err := strconv.ParseUint(vars["id"], 0, 64)
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
+
+	js, err := json.Marshal(store)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
 }
 
 func StoreUpdateHandler(rw http.ResponseWriter, r *http.Request) {
@@ -82,8 +114,32 @@ func StoreLinksCreateHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoreLinkShowHandler(rw http.ResponseWriter, r *http.Request) {
-	text := "GET /stores/{store_id}/links/{id} - show link"
-	rw.Write([]byte(text))
+
+	vars := mux.Vars(r)
+	storeId, err := strconv.ParseUint(vars["store_id"], 0, 64)
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	linkId, err := strconv.ParseUint(vars["id"], 0, 64)
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
+
+	js, err := json.Marshal(link)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
 }
 
 func StoreLinkUpdateHandler(rw http.ResponseWriter, r *http.Request) {
