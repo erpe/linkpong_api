@@ -72,7 +72,7 @@ func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
-	//text := "GET /stores/{id} - show store"
+
 	vars := mux.Vars(r)
 	storeId, err := strconv.ParseUint(vars["id"], 0, 64)
 
