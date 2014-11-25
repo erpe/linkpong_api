@@ -17,18 +17,18 @@ func main() {
 	stores.Methods("POST").HandlerFunc(StoresCreateHandler)
 
 	// Store singular
-	store := r.PathPrefix("/store/{id}").Subrouter()
+	store := r.PathPrefix("/stores/{id}").Subrouter()
 	store.Methods("GET").HandlerFunc(StoreShowHandler)
 	store.Methods("PUT", "POST").HandlerFunc(StoreUpdateHandler)
 	store.Methods("DELETE").HandlerFunc(StoreDeleteHandler)
 
 	// links collection
-	links := r.Path("stores/{store_id}/links").Subrouter()
+	links := r.PathPrefix("stores/{store_id}/links").Subrouter()
 	links.Methods("GET").HandlerFunc(StoreLinksIndexHandler)
 	links.Methods("POST").HandlerFunc(StoreLinksCreateHandler)
 
 	// links singular
-	link := r.Path("/store/{store_id}/links/{id}").Subrouter()
+	link := r.PathPrefix("/store/{store_id}/links/{id}").Subrouter()
 	link.Methods("GET").HandlerFunc(StoreLinkShowHandler)
 	link.Methods("PUT", "POST").HandlerFunc(StoreLinkUpdateHandler)
 	link.Methods("DELETE").HandlerFunc(StoreLinkDeleteHandler)
