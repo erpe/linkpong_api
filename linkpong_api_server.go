@@ -26,20 +26,18 @@ type StoreJSON struct {
 }
 
 type StoresJSON struct {
+	Stores []Store `json:"stores"`
 }
 
 type LinkJSON struct {
 	Link Link `json:"link"`
 }
 type LinksJSON struct {
+	Links []Link `json:"links"`
 }
 
-//func main() {
-//	r := mux.NewRouter()
-//	r.HandleFunc("/save", saveHandler)
-//	http.Handle("/", &MyServer{r})
-//	http.ListenAndServe(":8080", nil);
-//}
+var stores []Store
+var links []Link
 
 func main() {
 
@@ -85,7 +83,6 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
-	text := "GET /stores - stores index"
 
 	if origin := r.Header.Get("Origin"); origin != "" {
 		rw.Header().Set("Access-Control-Allow-Origin", origin)
@@ -96,7 +93,29 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
-	rw.Write([]byte(text))
+
+	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
+	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3"}
+
+	stores = append(stores, store1, store2)
+
+	js, err := json.Marshal(StoresJSON{Stores: stores})
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
 }
 
 func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
@@ -146,8 +165,48 @@ func StoreDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoreLinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
-	text := "GET /stores/{store_id}/links - links index"
-	rw.Write([]byte(text))
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	vars := mux.Vars(r)
+	storeId, err := strconv.ParseUint(vars["store_id"], 0, 64)
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	link1 := Link{42, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
+	link2 := Link{43, "The linkpong app", "https://github.com/pixelkritzel/linkpong-ember-client", storeId}
+
+	links = append(links, link1, link2)
+
+	js, err := json.Marshal(LinksJSON{Links: links})
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
+
 }
 
 func StoreLinksCreateHandler(rw http.ResponseWriter, r *http.Request) {
