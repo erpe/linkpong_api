@@ -22,7 +22,7 @@ type Store struct {
 }
 
 type StoreJSON struct {
-	Store Store `json:"kitten"`
+	Store Store `json:"store"`
 }
 
 type StoresJSON struct {
