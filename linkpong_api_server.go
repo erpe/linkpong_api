@@ -40,7 +40,7 @@ func main() {
 
 	// Store singular
 	store := r.Path("/stores/{id}").Subrouter()
-	store.Methods("GET").HandlerFunc(StoreShowHandler)
+	store.Methods("GET", "OPTIONS").HandlerFunc(StoreShowHandler)
 	store.Methods("PUT", "POST").HandlerFunc(StoreUpdateHandler)
 	store.Methods("DELETE").HandlerFunc(StoreDeleteHandler)
 
@@ -98,7 +98,17 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	rw.Header().Add("Access-Control-Allow-Origin", "*")
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
+	//rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(js)
 }
