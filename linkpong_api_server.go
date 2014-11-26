@@ -21,6 +21,13 @@ type Store struct {
 	Uuid  string `json:"uuid"`
 }
 
+//func main() {
+//	r := mux.NewRouter()
+//	r.HandleFunc("/save", saveHandler)
+//	http.Handle("/", &MyServer{r})
+//	http.ListenAndServe(":8080", nil);
+//}
+
 func main() {
 
 	r := mux.NewRouter()
@@ -49,6 +56,9 @@ func main() {
 	link.Methods("DELETE").HandlerFunc(StoreLinkDeleteHandler)
 
 	http.ListenAndServe(":8080", r)
+	//http.Handle("/", &CorsServer{r})
+	http.ListenAndServe(":8080", nil)
+
 }
 
 func HomeHandler(rw http.ResponseWriter, r *http.Request) {
@@ -88,7 +98,7 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(js)
 }
@@ -150,4 +160,22 @@ func StoreLinkUpdateHandler(rw http.ResponseWriter, r *http.Request) {
 func StoreLinkDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 	text := "DELETE /stores/{store_id}/links/{id} - delete link"
 	rw.Write([]byte(text))
+}
+
+type CorsServer struct {
+	r *mux.Router
+}
+
+func (s *CorsServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if origin := req.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if req.Method == "OPTIONS" {
+		return
+	}
+	// Lets Gorilla work
+	s.r.ServeHTTP(rw, req)
 }
