@@ -2,8 +2,11 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -19,6 +22,7 @@ type Store struct {
 	Id    uint64 `json:"id"`
 	Title string `json:"title"`
 	Uuid  string `json:"uuid"`
+	Links []Link `json:"links"`
 }
 
 type StoreJSON struct {
@@ -40,7 +44,7 @@ var stores []Store
 var links []Link
 
 func main() {
-
+	//db := NewDB()
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
 
@@ -68,7 +72,7 @@ func main() {
 
 	http.ListenAndServe(":8080", r)
 	//http.Handle("/", &CorsServer{r})
-	http.ListenAndServe(":8080", nil)
+	//http.ListenAndServe(":8080", db)
 
 }
 
@@ -94,8 +98,8 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
-	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3"}
+	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", links}
+	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", links}
 
 	stores = append(stores, store1, store2)
 
@@ -133,7 +137,11 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
+	link1 := Link{42, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
+	link2 := Link{43, "The linkpong app", "https://github.com/pixelkritzel/linkpong-ember-client", storeId}
+
+	links = append(links, link1, link2)
+	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv", links}
 
 	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {
@@ -252,6 +260,25 @@ func StoreLinkDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 	text := "DELETE /stores/{store_id}/links/{id} - delete link"
 	rw.Write([]byte(text))
 }
+
+// database
+
+func NewDB() *sql.DB {
+	db, err := sql.Open("sqlite3", "example.sqlite")
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("preparing database")
+	_, err = db.Exec("create table if not exists links(id integer, title string, url text, store_id integer)")
+	_, err = db.Exec("create table if not exists stores(id integer, title string, uuid string)")
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
+// TODO: get rid of this...
 
 type CorsServer struct {
 	r *mux.Router
