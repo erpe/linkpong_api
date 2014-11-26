@@ -19,10 +19,10 @@ type Link struct {
 }
 
 type Store struct {
-	Id    uint64 `json:"id"`
-	Title string `json:"title"`
-	Uuid  string `json:"uuid"`
-	Links []Link `json:"links"`
+	Id    uint64   `json:"id"`
+	Title string   `json:"title"`
+	Uuid  string   `json:"uuid"`
+	Links []uint64 `json:"links"`
 }
 
 type StoreJSON struct {
@@ -42,8 +42,13 @@ type LinksJSON struct {
 
 var stores []Store
 var links []Link
+var link_ids []uint64
 
 func main() {
+
+	// dummy data
+	link_ids = append(link_ids, 42, 43)
+
 	//db := NewDB()
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
@@ -98,8 +103,8 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", links}
-	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", links}
+	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
+	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", link_ids}
 
 	stores = append(stores, store1, store2)
 
@@ -137,11 +142,7 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link1 := Link{42, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
-	link2 := Link{43, "The linkpong app", "https://github.com/pixelkritzel/linkpong-ember-client", storeId}
-
-	links = append(links, link1, link2)
-	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv", links}
+	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
 
 	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {
