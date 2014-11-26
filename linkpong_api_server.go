@@ -21,6 +21,19 @@ type Store struct {
 	Uuid  string `json:"uuid"`
 }
 
+type StoreJSON struct {
+	Store Store `json:"kitten"`
+}
+
+type StoresJSON struct {
+}
+
+type LinkJSON struct {
+	Link Link `json:"link"`
+}
+type LinksJSON struct {
+}
+
 //func main() {
 //	r := mux.NewRouter()
 //	r.HandleFunc("/save", saveHandler)
@@ -73,6 +86,16 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 	text := "GET /stores - stores index"
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
 	rw.Write([]byte(text))
 }
 
@@ -93,7 +116,7 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 
 	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
 
-	js, err := json.Marshal(store)
+	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
@@ -108,7 +131,6 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
-	//rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(js)
 }
@@ -152,7 +174,7 @@ func StoreLinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 
 	link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
 
-	js, err := json.Marshal(link)
+	js, err := json.Marshal(LinkJSON{Link: link})
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
