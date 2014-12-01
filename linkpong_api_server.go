@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -12,10 +13,10 @@ import (
 )
 
 type Link struct {
-	Id      uint64 `json:"id"`
-	Title   string `json:"title"`
-	Url     string `json:"url"`
-	StoreId uint64 `json:"store_id"`
+	Id     uint64 `json:"id"`
+	Title  string `json:"title"`
+	Url    string `json:"url"`
+	MoreId uint64 `json:"store_id"`
 }
 
 type Store struct {
@@ -43,13 +44,26 @@ type LinksJSON struct {
 var stores []Store
 var links []Link
 var link_ids []uint64
+var dbcon *sql.DB
+
+//func main() {
+//	n := negroni.New(
+//		negroni.NewRecovery(),
+//		negroni.HandlerFunc(Setup),
+//		negroni.NewLogger(),
+//		negroni.NewStatic(http.Dir("public")),
+//	)
+//	n.Run(":8080")
+//}
 
 func main() {
-
 	// dummy data
 	link_ids = append(link_ids, 42, 43)
 
-	//db := NewDB()
+	dbcon = NewDB()
+
+	log.Println("preparing Router...")
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
 
@@ -75,10 +89,22 @@ func main() {
 	link.Methods("PUT", "POST").HandlerFunc(StoreLinkUpdateHandler)
 	link.Methods("DELETE").HandlerFunc(StoreLinkDeleteHandler)
 
-	http.ListenAndServe(":8080", r)
-	//http.Handle("/", &CorsServer{r})
-	//http.ListenAndServe(":8080", db)
+	// base_links collection
+	base_links := r.Path("/links").Subrouter()
+	base_links.Methods("GET").HandlerFunc(LinksIndexHandler)
+	base_links.Methods("POST").HandlerFunc(LinksCreateHandler)
 
+	// base links singular
+	base_link := r.Path("/links/{id}").Subrouter()
+	base_link.Methods("GET").HandlerFunc(LinkShowHandler)
+	base_link.Methods("PUT", "POST").HandlerFunc(LinkUpdateHandler)
+	base_link.Methods("DELETE").HandlerFunc(LinkDeleteHandler)
+
+	log.Println("server starts listening on 8080...")
+	n := negroni.New(negroni.NewLogger())
+	n.UseHandler(r)
+	n.Run(":8080")
+	//http.ListenAndServe(":8080", r)
 }
 
 func HomeHandler(rw http.ResponseWriter, r *http.Request) {
@@ -170,6 +196,82 @@ func StoreUpdateHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoreDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 	text := "DELETE /stores/{id} - deletes store"
+	rw.Write([]byte(text))
+}
+
+func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	link1 := Link{42, "The linkpong api", "http://github.com/erpe/linkpong_api", 1}
+	link2 := Link{43, "The linkpong app", "https://github.com/pixelkritzel/linkpong-ember-client", 2}
+
+	links = append(links, link1, link2)
+
+	js, err := json.Marshal(LinksJSON{Links: links})
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
+
+}
+
+func LinksCreateHandler(rw http.ResponseWriter, r *http.Request) {
+	text := "POST /stores/{store_id}/links - create link"
+	rw.Write([]byte(text))
+}
+
+func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {
+
+	if origin := r.Header.Get("Origin"); origin != "" {
+		rw.Header().Set("Access-Control-Allow-Origin", origin)
+		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	}
+	// Stop here if its Preflighted OPTIONS request
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	linkId, err := strconv.ParseUint(vars["id"], 0, 64)
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", 2}
+
+	js, err := json.Marshal(LinkJSON{Link: link})
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
+}
+
+func LinkUpdateHandler(rw http.ResponseWriter, r *http.Request) {
+	text := "POST | PUT /stores/{store_id}/links/{id} - update link"
+	rw.Write([]byte(text))
+}
+
+func LinkDeleteHandler(rw http.ResponseWriter, r *http.Request) {
+	text := "DELETE /stores/{store_id}/links/{id} - delete link"
 	rw.Write([]byte(text))
 }
 
@@ -276,6 +378,7 @@ func NewDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("database prepared")
 	return db
 }
 
