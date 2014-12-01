@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"github.com/codegangsta/negroni"
+	"github.com/erpe/linkpong_api/cors"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -45,16 +46,6 @@ var stores []Store
 var links []Link
 var link_ids []uint64
 var dbcon *sql.DB
-
-//func main() {
-//	n := negroni.New(
-//		negroni.NewRecovery(),
-//		negroni.HandlerFunc(Setup),
-//		negroni.NewLogger(),
-//		negroni.NewStatic(http.Dir("public")),
-//	)
-//	n.Run(":8080")
-//}
 
 func main() {
 	// dummy data
@@ -101,7 +92,8 @@ func main() {
 	base_link.Methods("DELETE").HandlerFunc(LinkDeleteHandler)
 
 	log.Println("server starts listening on 8080...")
-	n := negroni.New(negroni.NewLogger())
+
+	n := negroni.New(negroni.NewLogger(), negroni.HandlerFunc(cors.Intercept))
 	n.UseHandler(r)
 	n.Run(":8080")
 	//http.ListenAndServe(":8080", r)
@@ -119,16 +111,6 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
 	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", link_ids}
 
@@ -140,15 +122,6 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
-		return
-	}
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(js)
 }
@@ -175,16 +148,6 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
-		return
-	}
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Write(js)
 }
@@ -201,18 +164,10 @@ func StoreDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 
 func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
-		return
-	}
-
-	link1 := Link{42, "The linkpong api", "http://github.com/erpe/linkpong_api", 1}
-	link2 := Link{43, "The linkpong app", "https://github.com/pixelkritzel/linkpong-ember-client", 2}
+	link1 := Link{42, "The linkpong api",
+		"http://github.com/erpe/linkpong_api", 1}
+	link2 := Link{43, "The linkpong app",
+		"https://github.com/pixelkritzel/linkpong-ember-client", 2}
 
 	links = append(links, link1, link2)
 
@@ -233,16 +188,6 @@ func LinksCreateHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {
-
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
-		return
-	}
 
 	vars := mux.Vars(r)
 
@@ -277,16 +222,6 @@ func LinkDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoreLinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
-		return
-	}
-
 	vars := mux.Vars(r)
 	storeId, err := strconv.ParseUint(vars["store_id"], 0, 64)
 
@@ -295,24 +230,16 @@ func StoreLinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link1 := Link{42, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
-	link2 := Link{43, "The linkpong app", "https://github.com/pixelkritzel/linkpong-ember-client", storeId}
+	link1 := Link{42, "The linkpong api",
+		"http://github.com/erpe/linkpong_api", storeId}
+	link2 := Link{43, "The linkpong app",
+		"https://github.com/pixelkritzel/linkpong-ember-client", storeId}
 
 	links = append(links, link1, link2)
 
 	js, err := json.Marshal(LinksJSON{Links: links})
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if origin := r.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if r.Method == "OPTIONS" {
 		return
 	}
 	rw.Header().Set("Content-Type", "application/json")
@@ -342,7 +269,8 @@ func StoreLinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", storeId}
+	link := Link{linkId, "The linkpong api",
+		"http://github.com/erpe/linkpong_api", storeId}
 
 	js, err := json.Marshal(LinkJSON{Link: link})
 	if err != nil {
@@ -380,24 +308,4 @@ func NewDB() *sql.DB {
 	}
 	log.Println("database prepared")
 	return db
-}
-
-// TODO: get rid of this...
-
-type CorsServer struct {
-	r *mux.Router
-}
-
-func (s *CorsServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if origin := req.Header.Get("Origin"); origin != "" {
-		rw.Header().Set("Access-Control-Allow-Origin", origin)
-		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	}
-	// Stop here if its Preflighted OPTIONS request
-	if req.Method == "OPTIONS" {
-		return
-	}
-	// Lets Gorilla work
-	s.r.ServeHTTP(rw, req)
 }
