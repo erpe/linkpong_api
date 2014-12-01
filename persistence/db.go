@@ -25,7 +25,7 @@ func (lm *LinkMapper) ToLink() model.Link {
 }
 
 func (sm *StoreMapper) ToStore() model.Store {
-	return model.Store{sm.Id, sm.Title, sm.Uuid, nil}
+	return model.Store{sm.Id, sm.Title, sm.Uuid}
 }
 
 func TestMapper() model.Link {

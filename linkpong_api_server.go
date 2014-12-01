@@ -100,8 +100,8 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	store1 := model.Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
-	store2 := model.Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", link_ids}
+	store1 := model.Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
+	store2 := model.Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3"}
 
 	stores = append(stores, store1, store2)
 
@@ -116,7 +116,28 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
-	text := "POST /stores - create store"
+	// Parse the incoming store from the request body
+	var store model.Store
+	err := json.NewDecoder(r.Body).Decode(&store)
+
+	if err != nil {
+		log.Println("error: " + err.Error())
+		panic(err)
+	}
+
+	// TODO: persist it to db
+	//
+	// and return back...
+
+	js, err := json.Marshal(StoreJSON{Store: store})
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	text := "POST /stores - create store - " + string(js)
+	log.Println("create: " + text)
 	rw.Write([]byte(text))
 }
 
@@ -130,7 +151,7 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := model.Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
+	store := model.Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
 
 	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {

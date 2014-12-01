@@ -8,8 +8,8 @@ type Link struct {
 }
 
 type Store struct {
-	Id    uint64   `json:"id"`
-	Title string   `json:"title"`
-	Uuid  string   `json:"uuid"`
-	Links []uint64 `json:"links"`
+	Id    uint64 `json:"id"`
+	Title string `json:"title"`
+	Uuid  string `json:"uuid"`
+	//Links []uint64 `json:"links"`
 }
