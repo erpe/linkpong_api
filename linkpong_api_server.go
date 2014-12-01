@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"github.com/codegangsta/negroni"
 	"github.com/erpe/linkpong_api/cors"
+	"github.com/erpe/linkpong_api/model"
+	"github.com/erpe/linkpong_api/persistence"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -13,45 +15,32 @@ import (
 	"strconv"
 )
 
-type Link struct {
-	Id     uint64 `json:"id"`
-	Title  string `json:"title"`
-	Url    string `json:"url"`
-	MoreId uint64 `json:"store_id"`
-}
-
-type Store struct {
-	Id    uint64   `json:"id"`
-	Title string   `json:"title"`
-	Uuid  string   `json:"uuid"`
-	Links []uint64 `json:"links"`
-}
-
+//
+//	"github.com/jmoiron/sqlx"
 type StoreJSON struct {
-	Store Store `json:"store"`
+	Store model.Store `json:"store"`
 }
 
 type StoresJSON struct {
-	Stores []Store `json:"stores"`
+	Stores []model.Store `json:"stores"`
 }
 
 type LinkJSON struct {
-	Link Link `json:"link"`
+	Link model.Link `json:"link"`
 }
 type LinksJSON struct {
-	Links []Link `json:"links"`
+	Links []model.Link `json:"links"`
 }
 
-var stores []Store
-var links []Link
+var stores []model.Store
+var links []model.Link
 var link_ids []uint64
-var dbcon *sql.DB
+var db *sql.DB
 
 func main() {
 	// dummy data
 	link_ids = append(link_ids, 42, 43)
-
-	dbcon = NewDB()
+	db = NewDB()
 
 	log.Println("preparing Router...")
 
@@ -111,8 +100,8 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	store1 := Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
-	store2 := Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", link_ids}
+	store1 := model.Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
+	store2 := model.Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3", link_ids}
 
 	stores = append(stores, store1, store2)
 
@@ -141,7 +130,7 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
+	store := model.Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv", link_ids}
 
 	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {
@@ -164,9 +153,9 @@ func StoreDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 
 func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	link1 := Link{42, "The linkpong api",
+	link1 := model.Link{42, "The linkpong api",
 		"http://github.com/erpe/linkpong_api", 1}
-	link2 := Link{43, "The linkpong app",
+	link2 := model.Link{43, "The linkpong app",
 		"https://github.com/pixelkritzel/linkpong-ember-client", 2}
 
 	links = append(links, link1, link2)
@@ -193,12 +182,15 @@ func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 
 	linkId, err := strconv.ParseUint(vars["id"], 0, 64)
 
-	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	//if err != nil {
+	//		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	//		return
+	//	}
 
-	link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", 2}
+	//link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", 2}
+	link := persistence.TestMapper()
+	link.Id = linkId
+	//Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", 2}
 
 	js, err := json.Marshal(LinkJSON{Link: link})
 	if err != nil {
@@ -230,9 +222,9 @@ func StoreLinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link1 := Link{42, "The linkpong api",
+	link1 := model.Link{42, "The linkpong api",
 		"http://github.com/erpe/linkpong_api", storeId}
-	link2 := Link{43, "The linkpong app",
+	link2 := model.Link{43, "The linkpong app",
 		"https://github.com/pixelkritzel/linkpong-ember-client", storeId}
 
 	links = append(links, link1, link2)
@@ -269,7 +261,7 @@ func StoreLinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link := Link{linkId, "The linkpong api",
+	link := model.Link{linkId, "The linkpong api",
 		"http://github.com/erpe/linkpong_api", storeId}
 
 	js, err := json.Marshal(LinkJSON{Link: link})
@@ -295,14 +287,23 @@ func StoreLinkDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 // database
 
 func NewDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "example.sqlite")
+	db, err := sql.Open("sqlite3", "linkpong.sqlite")
 	if err != nil {
 		panic(err)
 	}
 
 	log.Println("preparing database")
-	_, err = db.Exec("create table if not exists links(id integer, title string, url text, store_id integer)")
-	_, err = db.Exec("create table if not exists stores(id integer, title string, uuid string)")
+	_, err = db.Exec("create table if not exists links(id INTEGER PRIMARY KEY AUTOINCREMENT, title string, url text, store_id integer)")
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = db.Exec("create table if not exists stores(id INTEGER PRIMARY KEY AUTOINCREMENT, title string, uuid string)")
+	if err != nil {
+		panic(err)
+	}
+	_, err = db.Exec(`INSERT INTO stores (title,uuid) values ('Hier mein Super Store','xxxxx111111sss')`)
+
 	if err != nil {
 		panic(err)
 	}
