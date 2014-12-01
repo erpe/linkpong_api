@@ -40,7 +40,7 @@ var db *sql.DB
 func main() {
 	// dummy data
 	link_ids = append(link_ids, 42, 43)
-	db = NewDB()
+	db = persistence.NewDB()
 
 	log.Println("preparing Router...")
 
@@ -282,31 +282,4 @@ func StoreLinkUpdateHandler(rw http.ResponseWriter, r *http.Request) {
 func StoreLinkDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 	text := "DELETE /stores/{store_id}/links/{id} - delete link"
 	rw.Write([]byte(text))
-}
-
-// database
-
-func NewDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "linkpong.sqlite")
-	if err != nil {
-		panic(err)
-	}
-
-	log.Println("preparing database")
-	_, err = db.Exec("create table if not exists links(id INTEGER PRIMARY KEY AUTOINCREMENT, title string, url text, store_id integer)")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = db.Exec("create table if not exists stores(id INTEGER PRIMARY KEY AUTOINCREMENT, title string, uuid string)")
-	if err != nil {
-		panic(err)
-	}
-	_, err = db.Exec(`INSERT INTO stores (title,uuid) values ('Hier mein Super Store','xxxxx111111sss')`)
-
-	if err != nil {
-		panic(err)
-	}
-	log.Println("database prepared")
-	return db
 }
