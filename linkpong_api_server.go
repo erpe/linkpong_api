@@ -117,8 +117,8 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
 func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 	// Parse the incoming store from the request body
-	var store model.Store
-	err := json.NewDecoder(r.Body).Decode(&store)
+	var storeJSON StoreJSON
+	err := json.NewDecoder(r.Body).Decode(&storeJSON)
 
 	if err != nil {
 		log.Println("error: " + err.Error())
@@ -129,7 +129,7 @@ func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 	//
 	// and return back...
 
-	js, err := json.Marshal(StoreJSON{Store: store})
+	js, err := json.Marshal(StoreJSON{Store: storeJSON.Store})
 
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
