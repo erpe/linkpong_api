@@ -33,6 +33,25 @@ func TestMapper() model.Link {
 	return lnk.ToLink()
 }
 
+func CreateStore(store *model.Store, db *sql.DB) model.Store {
+	log.Println("About to create/persist a Store")
+
+	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $1)`, store.Title, "tasldfkjalsdkjfi34söihlsyehw")
+
+	if err != nil {
+		log.Println("ERROR: creating store")
+		panic(err)
+	}
+
+	lastId, err := result.LastInsertId()
+	if err != nil {
+		log.Println("Result caught error...")
+		panic(err)
+	}
+
+	return model.Store{uint64(lastId), store.Title, "asdjkfaolsjkdföalsjdfasdf"}
+}
+
 func NewDB() *sql.DB {
 	db, err := sql.Open("sqlite3", "linkpong.sqlite")
 	if err != nil {

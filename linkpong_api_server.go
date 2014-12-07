@@ -125,20 +125,32 @@ func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// TODO: persist it to db
-	//
-	// and return back...
+	newStore := persistence.CreateStore(&storeJSON.Store, db)
 
-	js, err := json.Marshal(StoreJSON{Store: storeJSON.Store})
+	js, err := json.Marshal(StoreJSON{Store: newStore})
 
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	//HTTP/1.1 201 Created
+	//Location: http://example.com/photos/550e8400-e29b-41d4-a716-446655440000
+	//Content-Type: application/vnd.api+json
+
+	//{
+	//  "photos": {
+	//		  "id": "550e8400-e29b-41d4-a716-446655440000",
+	//			"href": "http://example.com/photos/550e8400-e29b-41d4-a716-446655440000",
+	//			"title": "Ember Hamster",
+	//			"src": "http://example.com/images/productivity.png"
+	//	}
+	//}
 
 	text := "POST /stores - create store - " + string(js)
 	log.Println("create: " + text)
-	rw.Write([]byte(text))
+	rw.Header().Set("Location", "localhost:8080/stores/"+string(newStore.Id))
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
 }
 
 func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
