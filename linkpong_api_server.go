@@ -100,11 +100,12 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
+	log.Println("about handling StoresIndex")
 
-	store1 := model.Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
-	store2 := model.Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3"}
+	//store1 := model.Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
+	//store2 := model.Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3"}
 
-	stores = append(stores, store1, store2)
+	stores := persistence.AllStores(db)
 
 	js, err := json.Marshal(StoresJSON{Stores: stores})
 	if err != nil {

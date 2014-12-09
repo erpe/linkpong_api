@@ -93,6 +93,26 @@ func AllLinks(db *sqlx.DB) []model.Link {
 	return links
 }
 
+func AllStores(db *sqlx.DB) []model.Store {
+	log.Println("about to find all stores")
+
+	mappedStores := []StoreMapper{}
+	stores := []model.Store{}
+
+	err := db.Select(&mappedStores, "SELECT * FROM stores")
+
+	if err != nil {
+		log.Println("ERROR getting all stores..." + err.Error())
+		panic(err)
+	}
+
+	for _, value := range mappedStores {
+		stores = append(stores, value.ToStore())
+	}
+
+	return stores
+}
+
 func NewDB() *sqlx.DB {
 	db, err := sqlx.Open("sqlite3", "linkpong.sqlite")
 	if err != nil {
