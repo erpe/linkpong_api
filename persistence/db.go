@@ -40,14 +40,14 @@ func CreateStore(store *model.Store, db *sqlx.DB) model.Store {
 	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $2)`, store.Title, "1234567890")
 
 	if err != nil {
-		log.Println("ERROR: creating store")
+		log.Println("ERROR: creating store: " + err.Error())
 		panic(err)
 	}
 
 	lastId, err := result.LastInsertId()
 
 	if err != nil {
-		log.Println("Result caught error...")
+		log.Println("Result caught error..." + err.Error())
 		panic(err)
 	}
 
@@ -60,14 +60,14 @@ func CreateLink(link *model.Link, db *sqlx.DB) model.Link {
 	result, err := db.Exec(`INSERT INTO links (title, url, store_id) VALUES($1, $2, $3)`, link.Title, link.Url, link.StoreId)
 
 	if err != nil {
-		log.Println("ERROR creating link...")
+		log.Println("ERROR creating link..." + err.Error())
 		panic(err)
 	}
 
 	lastId, err := result.LastInsertId()
 
 	if err != nil {
-		log.Println("Result caught error...")
+		log.Println("Result caught error..." + err.Error())
 		panic(err)
 	}
 

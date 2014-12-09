@@ -176,14 +176,7 @@ func StoreDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 
 func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	//link1 := model.Link{42, "The linkpong api",
-	//	"http://github.com/erpe/linkpong_api", 1}
-	//link2 := model.Link{43, "The linkpong app",
-	//	"https://github.com/pixelkritzel/linkpong-ember-client", 2}
-
 	links := persistence.AllLinks(db)
-
-	//links = append(links, link1, link2)
 
 	js, err := json.Marshal(LinksJSON{Links: links})
 	if err != nil {
@@ -231,17 +224,11 @@ func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 
 	linkId, err := strconv.ParseUint(vars["id"], 0, 64)
 
-	//if err != nil {
-	//		http.Error(rw, err.Error(), http.StatusInternalServerError)
-	//		return
-	//	}
-
-	//link := Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", 2}
 	link := persistence.TestMapper()
 	link.Id = linkId
-	//Link{linkId, "The linkpong api", "http://github.com/erpe/linkpong_api", 2}
 
 	js, err := json.Marshal(LinkJSON{Link: link})
+
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
