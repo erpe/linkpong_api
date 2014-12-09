@@ -133,18 +133,6 @@ func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	//HTTP/1.1 201 Created
-	//Location: http://example.com/photos/550e8400-e29b-41d4-a716-446655440000
-	//Content-Type: application/vnd.api+json
-
-	//{
-	//  "photos": {
-	//		  "id": "550e8400-e29b-41d4-a716-446655440000",
-	//			"href": "http://example.com/photos/550e8400-e29b-41d4-a716-446655440000",
-	//			"title": "Ember Hamster",
-	//			"src": "http://example.com/images/productivity.png"
-	//	}
-	//}
 
 	text := "POST /stores - create store - " + string(js)
 	log.Println("create: " + text)
@@ -205,8 +193,32 @@ func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func LinksCreateHandler(rw http.ResponseWriter, r *http.Request) {
-	text := "POST /stores/{store_id}/links - create link"
-	rw.Write([]byte(text))
+	// curl -H "Content-Type: application/json" -d '{"link":{"title":"my link","url":"http://www.heise.de", "store_id":123456}}' http://localhost:8080/links
+	// Parse the incoming link from the request body
+	var linkJSON LinkJSON
+	err := json.NewDecoder(r.Body).Decode(&linkJSON)
+
+	if err != nil {
+		log.Println("error: " + err.Error())
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	newLink := persistence.CreateLink(&linkJSON.Link, db)
+
+	js, err := json.Marshal(LinkJSON{Link: newLink})
+
+	if err != nil {
+		log.Println("Error marshaling: " + err.Error())
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	text := "POST /links - create link - " + string(js)
+	log.Println("create: " + text)
+	rw.Header().Set("Location", "localhost:8080/stores/"+string(newLink.StoreId)+"/"+string(newLink.Id))
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(js)
 }
 
 func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {

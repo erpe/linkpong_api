@@ -36,7 +36,7 @@ func TestMapper() model.Link {
 func CreateStore(store *model.Store, db *sql.DB) model.Store {
 	log.Println("About to create/persist a Store")
 
-	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $1)`, store.Title, "tasldfkjalsdkjfi34söihlsyehw")
+	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $2)`, store.Title, "1234567890")
 
 	if err != nil {
 		log.Println("ERROR: creating store")
@@ -44,12 +44,33 @@ func CreateStore(store *model.Store, db *sql.DB) model.Store {
 	}
 
 	lastId, err := result.LastInsertId()
+
 	if err != nil {
 		log.Println("Result caught error...")
 		panic(err)
 	}
 
-	return model.Store{uint64(lastId), store.Title, "asdjkfaolsjkdföalsjdfasdf"}
+	return model.Store{uint64(lastId), store.Title, "1234567890"}
+}
+
+func CreateLink(link *model.Link, db *sql.DB) model.Link {
+	log.Println("about to create/persist a Link")
+
+	result, err := db.Exec(`INSERT INTO links (title, url, store_id) VALUES($1, $2, $3)`, link.Title, link.Url, link.StoreId)
+
+	if err != nil {
+		log.Println("ERROR creating link...")
+		panic(err)
+	}
+
+	lastId, err := result.LastInsertId()
+
+	if err != nil {
+		log.Println("Result caught error...")
+		panic(err)
+	}
+
+	return model.Link{uint64(lastId), link.Title, link.Url, link.StoreId}
 }
 
 func NewDB() *sql.DB {
