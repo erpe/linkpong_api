@@ -77,16 +77,16 @@ func CreateLink(link *model.Link, db *sqlx.DB) model.Link {
 func AllLinks(db *sqlx.DB) []model.Link {
 	log.Println("about to find all links")
 
-	allLinks := []LinkMapper{}
+	mappedLinks := []LinkMapper{}
 	links := []model.Link{}
-	err := db.Select(&allLinks, "SELECT * FROM links")
+	err := db.Select(&mappedLinks, "SELECT * FROM links")
 
 	if err != nil {
 		log.Println("ERROR getting all links..." + err.Error())
 		panic(err)
 	}
 
-	for _, value := range allLinks {
+	for _, value := range mappedLinks {
 		links = append(links, value.ToLink())
 	}
 
