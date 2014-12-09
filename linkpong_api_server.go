@@ -2,13 +2,14 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
+	//"database/sql"
 	"encoding/json"
 	"github.com/codegangsta/negroni"
 	"github.com/erpe/linkpong_api/cors"
 	"github.com/erpe/linkpong_api/model"
 	"github.com/erpe/linkpong_api/persistence"
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
@@ -35,7 +36,7 @@ type LinksJSON struct {
 var stores []model.Store
 var links []model.Link
 var link_ids []uint64
-var db *sql.DB
+var db *sqlx.DB
 
 func main() {
 	// dummy data
@@ -174,12 +175,14 @@ func StoreDeleteHandler(rw http.ResponseWriter, r *http.Request) {
 
 func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
-	link1 := model.Link{42, "The linkpong api",
-		"http://github.com/erpe/linkpong_api", 1}
-	link2 := model.Link{43, "The linkpong app",
-		"https://github.com/pixelkritzel/linkpong-ember-client", 2}
+	//link1 := model.Link{42, "The linkpong api",
+	//	"http://github.com/erpe/linkpong_api", 1}
+	//link2 := model.Link{43, "The linkpong app",
+	//	"https://github.com/pixelkritzel/linkpong-ember-client", 2}
 
-	links = append(links, link1, link2)
+	links := persistence.AllLinks(db)
+
+	//links = append(links, link1, link2)
 
 	js, err := json.Marshal(LinksJSON{Links: links})
 	if err != nil {

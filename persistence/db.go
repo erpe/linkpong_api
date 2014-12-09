@@ -1,8 +1,9 @@
 package persistence
 
 import (
-	"database/sql"
+	//"database/sql"
 	"github.com/erpe/linkpong_api/model"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 )
@@ -33,7 +34,7 @@ func TestMapper() model.Link {
 	return lnk.ToLink()
 }
 
-func CreateStore(store *model.Store, db *sql.DB) model.Store {
+func CreateStore(store *model.Store, db *sqlx.DB) model.Store {
 	log.Println("About to create/persist a Store")
 
 	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $2)`, store.Title, "1234567890")
@@ -53,7 +54,7 @@ func CreateStore(store *model.Store, db *sql.DB) model.Store {
 	return model.Store{uint64(lastId), store.Title, "1234567890"}
 }
 
-func CreateLink(link *model.Link, db *sql.DB) model.Link {
+func CreateLink(link *model.Link, db *sqlx.DB) model.Link {
 	log.Println("about to create/persist a Link")
 
 	result, err := db.Exec(`INSERT INTO links (title, url, store_id) VALUES($1, $2, $3)`, link.Title, link.Url, link.StoreId)
@@ -73,8 +74,27 @@ func CreateLink(link *model.Link, db *sql.DB) model.Link {
 	return model.Link{uint64(lastId), link.Title, link.Url, link.StoreId}
 }
 
-func NewDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "linkpong.sqlite")
+func AllLinks(db *sqlx.DB) []model.Link {
+	log.Println("about to find all links")
+
+	allLinks := []LinkMapper{}
+	links := []model.Link{}
+	err := db.Select(&allLinks, "SELECT * FROM links")
+
+	if err != nil {
+		log.Println("ERROR getting all links..." + err.Error())
+		panic(err)
+	}
+
+	for _, value := range allLinks {
+		links = append(links, value.ToLink())
+	}
+
+	return links
+}
+
+func NewDB() *sqlx.DB {
+	db, err := sqlx.Open("sqlite3", "linkpong.sqlite")
 	if err != nil {
 		panic(err)
 	}
