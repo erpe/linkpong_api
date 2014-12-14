@@ -102,9 +102,6 @@ func HomeHandler(rw http.ResponseWriter, r *http.Request) {
 func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 	log.Println("about handling StoresIndex")
 
-	//store1 := model.Store{1, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
-	//store2 := model.Store{2, "Javascript", "asdkfjalsdj3r3r3ljlm3i3r3"}
-
 	stores := persistence.AllStores(db)
 
 	js, err := json.Marshal(StoresJSON{Stores: stores})
@@ -154,7 +151,6 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	store := persistence.FindStore(storeId, db)
-	//store := model.Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
 
 	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {
@@ -225,8 +221,7 @@ func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 
 	linkId, err := strconv.ParseUint(vars["id"], 0, 64)
 
-	link := persistence.TestMapper()
-	link.Id = linkId
+	link := persistence.FindLink(linkId, db)
 
 	js, err := json.Marshal(LinkJSON{Link: link})
 
@@ -259,12 +254,7 @@ func StoreLinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link1 := model.Link{42, "The linkpong api",
-		"http://github.com/erpe/linkpong_api", storeId}
-	link2 := model.Link{43, "The linkpong app",
-		"https://github.com/pixelkritzel/linkpong-ember-client", storeId}
-
-	links = append(links, link1, link2)
+	links := persistence.FindLinksForStore(storeId, db)
 
 	js, err := json.Marshal(LinksJSON{Links: links})
 	if err != nil {

@@ -1,7 +1,6 @@
 package persistence
 
 import (
-	//"database/sql"
 	"github.com/erpe/linkpong_api/model"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -111,7 +110,7 @@ func AllStores(db *sqlx.DB) []model.Store {
 
 		store := value.ToStore()
 
-		links := FindLinksForStore(&store, db)
+		links := FindLinksForStore(store.Id, db)
 		linkIds := make([]uint64, 0)
 
 		for _, link := range links {
@@ -125,14 +124,14 @@ func AllStores(db *sqlx.DB) []model.Store {
 	return stores
 }
 
-func FindLinksForStore(store *model.Store, db *sqlx.DB) []model.Link {
+func FindLinksForStore(storeId uint64, db *sqlx.DB) []model.Link {
 	mappedLinks := []LinkMapper{}
 	links := []model.Link{}
 
-	err := db.Select(&mappedLinks, "SELECT * FROM links WHERE store_id = $1", store.Id)
+	err := db.Select(&mappedLinks, "SELECT * FROM links WHERE store_id = $1", storeId)
 
 	if err != nil {
-		log.Println("ERROR getting links for Store: " + string(store.Id) + " " + err.Error())
+		log.Println("ERROR getting links for Store: " + string(storeId) + " " + err.Error())
 		panic(err)
 	}
 
@@ -155,7 +154,7 @@ func FindStore(storeId uint64, db *sqlx.DB) model.Store {
 
 	store = mappedStore.ToStore()
 
-	links := FindLinksForStore(&store, db)
+	links := FindLinksForStore(storeId, db)
 	linkIds := make([]uint64, 0)
 
 	for _, val := range links {
