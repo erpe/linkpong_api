@@ -22,6 +22,11 @@ type StoreJSON struct {
 	Store model.Store `json:"store"`
 }
 
+type StoreSideloadJSON struct {
+	Store model.Store  `json:"store"`
+	Links []model.Link `json:"links"`
+}
+
 type StoresJSON struct {
 	Stores []model.Store `json:"stores"`
 }
@@ -151,8 +156,9 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	store := persistence.FindStore(storeId, db)
+	links := persistence.FindLinksForStore(storeId, db)
 
-	js, err := json.Marshal(StoreJSON{Store: store})
+	js, err := json.Marshal(StoreSideloadJSON{Store: store, Links: links})
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
