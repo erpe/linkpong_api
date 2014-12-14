@@ -26,7 +26,8 @@ func (lm *LinkMapper) ToLink() model.Link {
 }
 
 func (sm *StoreMapper) ToStore() model.Store {
-	return model.Store{sm.Id, sm.Title, sm.Uuid}
+	arr := make([]uint64, 0)
+	return model.Store{sm.Id, sm.Title, sm.Uuid, arr}
 }
 
 func TestMapper() model.Link {
@@ -51,7 +52,7 @@ func CreateStore(store *model.Store, db *sqlx.DB) model.Store {
 		panic(err)
 	}
 
-	return model.Store{uint64(lastId), store.Title, "1234567890"}
+	return model.Store{uint64(lastId), store.Title, "1234567890", make([]uint64, 0)}
 }
 
 func CreateLink(link *model.Link, db *sqlx.DB) model.Link {
@@ -107,10 +108,76 @@ func AllStores(db *sqlx.DB) []model.Store {
 	}
 
 	for _, value := range mappedStores {
-		stores = append(stores, value.ToStore())
+
+		store := value.ToStore()
+
+		links := FindLinksForStore(&store, db)
+		linkIds := make([]uint64, 0)
+
+		for _, link := range links {
+			linkIds = append(linkIds, link.Id)
+		}
+
+		store.Links = linkIds
+
+		stores = append(stores, store)
+	}
+	return stores
+}
+
+func FindLinksForStore(store *model.Store, db *sqlx.DB) []model.Link {
+	mappedLinks := []LinkMapper{}
+	links := []model.Link{}
+
+	err := db.Select(&mappedLinks, "SELECT * FROM links WHERE store_id = $1", store.Id)
+
+	if err != nil {
+		log.Println("ERROR getting links for Store: " + string(store.Id) + " " + err.Error())
+		panic(err)
 	}
 
-	return stores
+	for _, value := range mappedLinks {
+		links = append(links, value.ToLink())
+	}
+
+	return links
+}
+
+func FindStore(storeId uint64, db *sqlx.DB) model.Store {
+	mappedStore := StoreMapper{}
+	store := model.Store{}
+	err := db.Get(&mappedStore, "SELECT * FROM stores WHERE id = $1", storeId)
+
+	if err != nil {
+		log.Println("ERROR getting Store: " + string(storeId) + " " + err.Error())
+		panic(err)
+	}
+
+	store = mappedStore.ToStore()
+
+	links := FindLinksForStore(&store, db)
+	linkIds := make([]uint64, 0)
+
+	for _, val := range links {
+		linkIds = append(linkIds, val.Id)
+	}
+	store.Links = linkIds
+
+	return store
+}
+
+func FindLink(linkId uint64, db *sqlx.DB) model.Link {
+	mappedLink := LinkMapper{}
+	link := model.Link{}
+
+	err := db.Get(&mappedLink, "SELECT * FROM links WHERE id = $1", linkId)
+
+	if err != nil {
+		log.Println("ERROR getting Link: " + string(linkId) + " " + err.Error())
+	}
+
+	link = mappedLink.ToLink()
+	return link
 }
 
 func NewDB() *sqlx.DB {

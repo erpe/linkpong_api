@@ -153,7 +153,8 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := model.Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
+	store := persistence.FindStore(storeId, db)
+	//store := model.Store{storeId, "Golang", "lakjei38fasjifasifhjasdfaqcnv"}
 
 	js, err := json.Marshal(StoreJSON{Store: store})
 	if err != nil {
