@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	//"database/sql"
 	"encoding/json"
 	"github.com/codegangsta/negroni"
 	"github.com/erpe/linkpong_api/cors"
@@ -16,8 +15,6 @@ import (
 	"strconv"
 )
 
-//
-//	"github.com/jmoiron/sqlx"
 type StoreJSON struct {
 	Store model.Store `json:"store"`
 }
@@ -38,19 +35,18 @@ type LinksJSON struct {
 	Links []model.Link `json:"links"`
 }
 
-var stores []model.Store
-var links []model.Link
-var link_ids []uint64
-var db *sqlx.DB
+type Server struct {
+	router *mux.Router
+}
 
-func main() {
-	// dummy data
-	link_ids = append(link_ids, 42, 43)
-	db = persistence.NewDB()
+func (s *Server) GetRouter() *mux.Router {
+	return s.router
+}
 
-	log.Println("preparing Router...")
+func (s *Server) SetUp() {
 
 	r := mux.NewRouter()
+	s.router = r
 	r.HandleFunc("/", HomeHandler)
 
 	// stores collection
@@ -85,6 +81,53 @@ func main() {
 	base_link.Methods("GET").HandlerFunc(LinkShowHandler)
 	base_link.Methods("PUT", "POST").HandlerFunc(LinkUpdateHandler)
 	base_link.Methods("DELETE").HandlerFunc(LinkDeleteHandler)
+}
+
+var db *sqlx.DB
+
+func main() {
+	db = persistence.NewDB()
+
+	server := new(Server)
+	log.Println("preparing Router...")
+	server.SetUp()
+	r := server.GetRouter()
+
+	//	r := mux.NewRouter()
+	//	r.HandleFunc("/", HomeHandler)
+	//
+	//	// stores collection
+	//	stores := r.Path("/stores").Subrouter()
+	//	stores.Methods("GET").HandlerFunc(StoresIndexHandler)
+	//	stores.Methods("POST").HandlerFunc(StoresCreateHandler)
+	//
+	//	// Store singular
+	////	store := r.Path("/stores/{id}").Subrouter()
+	//	store.Methods("GET", "OPTIONS").HandlerFunc(StoreShowHandler)
+	//	store.Methods("PUT", "POST").HandlerFunc(StoreUpdateHandler)
+	////	store.Methods("DELETE").HandlerFunc(StoreDeleteHandler)
+	//
+	//	// links collection
+	//	links := r.Path("/stores/{store_id}/links").Subrouter()
+	//	links.Methods("GET").HandlerFunc(StoreLinksIndexHandler)
+	////	links.Methods("POST").HandlerFunc(StoreLinksCreateHandler)
+	//
+	//	// links singular
+	////	link := r.Path("/stores/{store_id}/links/{id}").Subrouter()
+	//	link.Methods("GET").HandlerFunc(StoreLinkShowHandler)
+	//	link.Methods("PUT", "POST").HandlerFunc(StoreLinkUpdateHandler)
+	//	link.Methods("DELETE").HandlerFunc(StoreLinkDeleteHandler)
+	////
+	//	// base_links collection
+	//	base_links := r.Path("/links").Subrouter()
+	//	base_links.Methods("GET").HandlerFunc(LinksIndexHandler)
+	//	base_links.Methods("POST").HandlerFunc(LinksCreateHandler)
+	//
+	//	// base links singular
+	//	base_link := r.Path("/links/{id}").Subrouter()
+	////	base_link.Methods("GET").HandlerFunc(LinkShowHandler)
+	//	base_link.Methods("PUT", "POST").HandlerFunc(LinkUpdateHandler)
+	//	base_link.Methods("DELETE").HandlerFunc(LinkDeleteHandler)
 
 	log.Println("server starts listening on 8080...")
 

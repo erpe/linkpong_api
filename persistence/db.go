@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"database/sql"
 	"github.com/erpe/linkpong_api/model"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -142,14 +143,19 @@ func FindLinksForStore(storeId uint64, db *sqlx.DB) []model.Link {
 	return links
 }
 
-func FindStore(storeId uint64, db *sqlx.DB) model.Store {
+func FindStore(storeId uint64, db *sqlx.DB) (model.Store, Error) {
 	mappedStore := StoreMapper{}
 	store := model.Store{}
 	err := db.Get(&mappedStore, "SELECT * FROM stores WHERE id = $1", storeId)
 
 	if err != nil {
-		log.Println("ERROR getting Store: " + string(storeId) + " " + err.Error())
-		panic(err)
+		if err == sql.ErrNoRows {
+			log.Println("No Result getting Store: " + string(storeId) + " " + err.Error())
+			return err
+		} else {
+			log.Println("ERROR getting Store: " + string(storeId) + " " + err.Error())
+			panic(err)
+		}
 	}
 
 	store = mappedStore.ToStore()
@@ -195,7 +201,7 @@ func NewDB() *sqlx.DB {
 	if err != nil {
 		panic(err)
 	}
-	_, err = db.Exec(`INSERT INTO stores (title,uuid) values ('Hier mein Super Store','xxxxx111111sss')`)
+	//_, err = db.Exec(`INSERT INTO stores (title,uuid) values ('Hier mein Super Store','xxxxx111111sss')`)
 
 	if err != nil {
 		panic(err)
