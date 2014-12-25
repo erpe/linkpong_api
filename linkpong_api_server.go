@@ -119,6 +119,11 @@ func StoresIndexHandler(rw http.ResponseWriter, r *http.Request) {
 	rw.Write(js)
 }
 
+/*
+ * creates a new Store
+ * Example:  curl -H "Content-Type: application/json" -d '{"store":{"title":"my nextstore"}}' http://localhost:8080/stores
+ *
+ */
 func StoresCreateHandler(rw http.ResponseWriter, r *http.Request) {
 	// Parse the incoming store from the request body
 	var storeJSON StoreJSON
@@ -192,8 +197,11 @@ func LinksIndexHandler(rw http.ResponseWriter, r *http.Request) {
 
 }
 
+/*
+ * creates a link in store
+ * Example: curl -H "Content-Type: application/json" -d '{"link":{"title":"my link","url":"http://www.heise.de", "store_id":123456}}' http://localhost:8080/links
+ */
 func LinksCreateHandler(rw http.ResponseWriter, r *http.Request) {
-	// curl -H "Content-Type: application/json" -d '{"link":{"title":"my link","url":"http://www.heise.de", "store_id":123456}}' http://localhost:8080/links
 	// Parse the incoming link from the request body
 	var linkJSON LinkJSON
 	err := json.NewDecoder(r.Body).Decode(&linkJSON)

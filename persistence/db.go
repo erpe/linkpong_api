@@ -4,6 +4,7 @@ import (
 	"github.com/erpe/linkpong_api/model"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/twinj/uuid"
 	"log"
 )
 
@@ -37,7 +38,9 @@ func TestMapper() model.Link {
 func CreateStore(store *model.Store, db *sqlx.DB) model.Store {
 	log.Println("About to create/persist a Store")
 
-	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $2)`, store.Title, "1234567890")
+	supplyUuid(store)
+
+	result, err := db.Exec(`INSERT INTO stores (title, uuid) VALUES( $1, $2)`, store.Title, store.Uuid)
 
 	if err != nil {
 		log.Println("ERROR: creating store: " + err.Error())
@@ -51,7 +54,7 @@ func CreateStore(store *model.Store, db *sqlx.DB) model.Store {
 		panic(err)
 	}
 
-	return model.Store{uint64(lastId), store.Title, "1234567890", make([]uint64, 0)}
+	return model.Store{uint64(lastId), store.Title, store.Uuid, make([]uint64, 0)}
 }
 
 func CreateLink(link *model.Link, db *sqlx.DB) model.Link {
@@ -202,4 +205,10 @@ func NewDB() *sqlx.DB {
 	}
 	log.Println("database prepared")
 	return db
+}
+
+func supplyUuid(store *model.Store) {
+	uuid.SwitchFormat(uuid.CleanHyphen)
+	id := uuid.NewV4()
+	store.Uuid = id.String()
 }
