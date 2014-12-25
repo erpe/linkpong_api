@@ -210,11 +210,11 @@ func NewDB() *sqlx.DB {
 	if err != nil {
 		panic(err)
 	}
-	_, err = db.Exec(`INSERT INTO stores (title,uuid) values ('Hier mein Super Store','xxxxx111111sss')`)
+	//_, err = db.Exec(`INSERT INTO stores (title,uuid) values ('Hier mein Super Store','xxxxx111111sss')`)
 
-	if err != nil {
-		panic(err)
-	}
+	//if err != nil {
+	//	panic(err)
+	//}
 	log.Println("database prepared")
 	return db
 }
