@@ -160,16 +160,27 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := persistence.FindStore(storeId, db)
-	links := persistence.FindLinksForStore(storeId, db)
-
-	js, err := json.Marshal(StoreSideloadJSON{Store: store, Links: links})
-	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	rw.Header().Set("Content-Type", "application/json")
-	rw.Write(js)
+
+	store, notFound := persistence.FindStore(storeId, db)
+
+	if notFound != nil {
+		log.Println("Handler: nout found: " + notFound.Error())
+		http.Error(rw, " ", http.StatusNotFound)
+		js, _ := json.Marshal(notFound)
+		rw.Write(js)
+
+	} else {
+
+		links := persistence.FindLinksForStore(storeId, db)
+		js, err := json.Marshal(StoreSideloadJSON{Store: store, Links: links})
+
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rw.Write(js)
+	}
 }
 
 func StoreUpdateHandler(rw http.ResponseWriter, r *http.Request) {

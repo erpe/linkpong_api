@@ -1,11 +1,14 @@
 package persistence
 
 import (
+	"database/sql"
+	"github.com/erpe/linkpong_api/errors"
 	"github.com/erpe/linkpong_api/model"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/twinj/uuid"
 	"log"
+	"strconv"
 )
 
 type LinkMapper struct {
@@ -145,14 +148,23 @@ func FindLinksForStore(storeId uint64, db *sqlx.DB) []model.Link {
 	return links
 }
 
-func FindStore(storeId uint64, db *sqlx.DB) model.Store {
+func FindStore(storeId uint64, db *sqlx.DB) (model.Store, *errors.NotFoundError) {
+	var myerr *errors.NotFoundError
+
 	mappedStore := StoreMapper{}
 	store := model.Store{}
-	err := db.Get(&mappedStore, "SELECT * FROM stores WHERE id = $1", storeId)
+	err := db.Get(&mappedStore, "SELECT * FROM stores WHERE id = $1 LIMIT 1", storeId)
+
+	storeIdString := strconv.Itoa(int(storeId))
 
 	if err != nil {
-		log.Println("ERROR getting Store: " + string(storeId) + " " + err.Error())
-		panic(err)
+		if err == sql.ErrNoRows {
+			log.Println("No such Store for given store_id: " + storeIdString)
+			myerr = &errors.NotFoundError{"No such store_id: " + storeIdString}
+		} else {
+			log.Println("ERROR getting Store: " + storeIdString + " " + err.Error())
+			panic(err)
+		}
 	}
 
 	store = mappedStore.ToStore()
@@ -165,7 +177,7 @@ func FindStore(storeId uint64, db *sqlx.DB) model.Store {
 	}
 	store.Links = linkIds
 
-	return store
+	return store, myerr
 }
 
 func FindLink(linkId uint64, db *sqlx.DB) model.Link {
