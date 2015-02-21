@@ -156,7 +156,8 @@ func StoreShowHandler(rw http.ResponseWriter, r *http.Request) {
 	storeId, err := strconv.ParseUint(vars["id"], 0, 64)
 
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		//http.Error(rw, err.Error(), http.StatusInternalServerError)
+		http.Error(rw, "unknown id: "+vars["id"], http.StatusNotFound)
 		return
 	}
 
@@ -246,7 +247,16 @@ func LinkShowHandler(rw http.ResponseWriter, r *http.Request) {
 
 	linkId, err := strconv.ParseUint(vars["id"], 0, 64)
 
-	link := persistence.FindLink(linkId, db)
+	if err != nil {
+		http.Error(rw, "unknown link_id: "+vars["id"], http.StatusNotFound)
+		return
+	}
+
+	link, err := persistence.FindLink(linkId, db)
+	if err != nil {
+		http.Error(rw, "unknown link_id: "+vars["id"], http.StatusNotFound)
+		return
+	}
 
 	js, err := json.Marshal(LinkJSON{Link: link})
 

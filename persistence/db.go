@@ -180,7 +180,9 @@ func FindStore(storeId uint64, db *sqlx.DB) (model.Store, *errors.NotFoundError)
 	return store, myerr
 }
 
-func FindLink(linkId uint64, db *sqlx.DB) model.Link {
+func FindLink(linkId uint64, db *sqlx.DB) (model.Link, error) {
+	var myerr *errors.NotFoundError
+
 	mappedLink := LinkMapper{}
 	link := model.Link{}
 
@@ -188,10 +190,16 @@ func FindLink(linkId uint64, db *sqlx.DB) model.Link {
 
 	if err != nil {
 		log.Println("ERROR getting Link: " + string(linkId) + " " + err.Error())
+		if err == sql.ErrNoRows {
+			myerr = &errors.NotFoundError{"No such link for id:  " + strconv.Itoa(int(linkId))}
+			return link, myerr
+		} else {
+			return link, err
+		}
 	}
 
 	link = mappedLink.ToLink()
-	return link
+	return link, nil
 }
 
 func NewDB() *sqlx.DB {
